@@ -1,0 +1,78 @@
+import utm
+import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+csv_file = "DJIFlightRecord_2021-03-18_[13-04-51]-TxtLogToCsv.csv"
+main_dir = "../"
+csv_file_path = os.path.join(main_dir, csv_file)
+
+
+# Check if the file exists
+def read_file(file_path):
+    # Read the CSV file with an alternative encoding
+    try:
+        df = pd.read_csv(csv_file_path, encoding='latin1')  # Use 'latin1' to handle non-UTF-8 characters
+    except UnicodeDecodeError as e:
+        print(f"Error reading the file: {e}")
+        exit(1)
+    return df
+    
+
+df = read_file(csv_file_path)
+
+# Extract all headers from the DataFrame
+headers = df.columns.tolist()
+
+# Save headers to a CSV file
+headers_csv_file = "headers_output.csv"
+headers_df = pd.DataFrame(headers, columns=["Headers"])
+headers_df.to_csv(headers_csv_file, index=False)
+
+print(f"Headers have been saved to {headers_csv_file}")
+
+# Define the columns to extract and plot
+columns_to_plot = [
+    "CUSTOM.hSpeed [m/s]",
+    "CUSTOM.distance [m]",
+    "CUSTOM.travelled [m]",
+    "CUSTOM.hSpeed.running_max [m/s]",
+    "CALC.hSpeed [m/s]",
+    "CALC.distance [m]",
+    "CALC.travelled [m]",
+    "CALC.distance.running_max [m]",
+    "CALC.height.running_max [m]"
+]
+
+# Create individual plots for each column
+for column in columns_to_plot:
+    if column in df.columns:
+        plt.figure()
+        plt.plot(df[column], label=column)
+        plt.title(f"Plot of {column}")
+        plt.xlabel("Index")
+        plt.ylabel(column)
+        plt.legend()
+        plt.grid()
+        plt.savefig(f"{column.replace(' ', '_').replace('/', '_')}_plot.png")
+        plt.close()
+    else:
+        print(f"Column {column} not found in the DataFrame.")
+
+# Create a combined plot for all columns
+plt.figure()
+for column in columns_to_plot:
+    if column in df.columns:
+        plt.plot(df[column], label=column)
+    else:
+        print(f"Column {column} not found in the DataFrame.")
+plt.title("Combined Plot of Selected Columns")
+plt.xlabel("Index")
+plt.ylabel("Values")
+plt.legend()
+plt.grid()
+plt.savefig("combined_plot.png")
+plt.close()
+
+print("Plots have been saved.")
